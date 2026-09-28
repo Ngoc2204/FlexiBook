@@ -57,4 +57,24 @@ export class NotificationProducer {
       this.logger.warn(`Failed to enqueue payment notification job: ${(error as Error).message}`);
     }
   }
+
+  async sendReminderNotification(bookingId: string) {
+    try {
+      await this.queue.add(
+        NOTIFICATION_JOBS.BOOKING_REMINDER,
+        { bookingId },
+        {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 2000,
+          },
+          removeOnComplete: true,
+        },
+      );
+      this.logger.log(`Enqueued reminder notification job for booking: ${bookingId}`);
+    } catch (error) {
+      this.logger.warn(`Failed to enqueue reminder notification job: ${(error as Error).message}`);
+    }
+  }
 }

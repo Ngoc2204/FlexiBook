@@ -7,13 +7,15 @@
   "license": "UNLICENSED",
   "type": "module",
   "scripts": {
-    "build": "prisma generate && nest build",
+    "build": "prisma generate && npm --prefix frontend install && npm --prefix frontend run build && nest build",
+    "build:frontend": "npm --prefix frontend install && npm --prefix frontend run build",
     "deploy": "nest deploy",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main.js",
+    "seed": "tsx prisma/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "lint": "oxlint src/ test/",
@@ -23,6 +25,9 @@
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@nestjs/bullmq": "^12.0.0",
     "@nestjs/common": "^12.0.1",
@@ -31,6 +36,8 @@
     "@nestjs/jwt": "^12.0.2",
     "@nestjs/passport": "^12.0.0",
     "@nestjs/platform-express": "^12.0.1",
+    "@nestjs/schedule": "^12.0.2",
+    "@nestjs/serve-static": "^12.0.0",
     "@nestjs/swagger": "^12.0.2",
     "@prisma/client": "^6.19.3",
     "bcrypt": "^6.0.0",
@@ -59,6 +66,7 @@
     "prisma": "^6.19.3",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.2",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.1.2"

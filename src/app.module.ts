@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import configuration from './config/configuration.js';
 import { PrismaModule } from './common/prisma/prisma.module.js';
 import { RedisModule } from './common/redis/redis.module.js';
@@ -17,6 +20,11 @@ import { AppService } from './app.service.js';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'public'),
+      exclude: ['/api/(.*)'],
+    }),
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
