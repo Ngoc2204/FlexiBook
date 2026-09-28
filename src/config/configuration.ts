@@ -5,8 +5,10 @@ export default () => ({
     url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/flexibook?schema=public',
   },
   redis: {
+    url: process.env.REDIS_URL,
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD || undefined,
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'flexibook_super_secret_jwt_key_change_in_production',

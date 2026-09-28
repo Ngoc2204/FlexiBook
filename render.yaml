@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: flexibook-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: flexibook-postgres
+          property: connectionString
+      - key: REDIS_URL
+        sync: false # Nhập link Redis từ Upstash.com (miễn phí)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: SEPAY_API_KEY
+        sync: false
+
+databases:
+  - name: flexibook-postgres
+    databaseName: flexibook
+    user: flexibook_user
+    plan: free
+    region: singapore

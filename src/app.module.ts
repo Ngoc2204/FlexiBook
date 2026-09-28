@@ -24,14 +24,32 @@ import { AppService } from './app.service.js';
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        connection: {
-          host: config.get<string>('redis.host', 'localhost'),
-          port: config.get<number>('redis.port', 6379),
-          lazyConnect: true,
-          maxRetriesPerRequest: 1,
-        },
-      }),
+      useFactory: (config: ConfigService) => {
+        const redisUrl = config.get<string>('redis.url');
+        if (redisUrl) {
+          const parsed = new URL(redisUrl);
+          return {
+            connection: {
+              host: parsed.hostname,
+              port: parseInt(parsed.port || '6379', 10),
+              password: parsed.password ? decodeURIComponent(parsed.password) : undefined,
+              username: parsed.username ? decodeURIComponent(parsed.username) : undefined,
+              tls: parsed.protocol === 'rediss:' ? {} : undefined,
+              lazyConnect: true,
+              maxRetriesPerRequest: 1,
+            },
+          };
+        }
+        return {
+          connection: {
+            host: config.get<string>('redis.host', 'localhost'),
+            port: config.get<number>('redis.port', 6379),
+            password: config.get<string>('redis.password'),
+            lazyConnect: true,
+            maxRetriesPerRequest: 1,
+          },
+        };
+      },
     }),
     PrismaModule,
     RedisModule,
