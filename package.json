@@ -7,8 +7,8 @@
   "license": "UNLICENSED",
   "type": "module",
   "scripts": {
-    "build": "prisma generate && npm --prefix frontend install && npm --prefix frontend run build && nest build",
-    "build:frontend": "npm --prefix frontend install && npm --prefix frontend run build",
+    "build": "prisma generate && nest build",
+    "build:frontend": "cd frontend && npm install && npm run build",
     "deploy": "nest deploy",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
