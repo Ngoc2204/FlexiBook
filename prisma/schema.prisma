@@ -1,0 +1,144 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+enum BookingStatus {
+  PENDING_DEPOSIT // Chờ cọc
+  CONFIRMED       // Đã xác nhận / Đã cọc
+  IN_PROGRESS     // Đang thực hiện
+  COMPLETED       // Hoàn thành
+  CANCELLED       // Đã hủy
+  NO_SHOW         // Khách bùng hẹn
+}
+
+enum IndustryType {
+  BARBER
+  SPA
+  CLINIC
+  GENERAL
+}
+
+// Cấu hình linh hoạt cho từng cơ sở (White-label)
+model BusinessSetting {
+  id              String       @id @default(uuid())
+  businessName    String
+  industry        IndustryType @default(GENERAL)
+  logoUrl         String?
+  primaryColor    String       @default("#3B82F6")
+  
+  // Dynamic Terminology
+  staffLabel      String       @default("Nhân viên") // Thợ cắt tóc / Kỹ thuật viên / Bác sĩ
+  serviceLabel    String       @default("Dịch vụ")   // Mẫu tóc / Gói trị liệu / Gói khám
+  bookingLabel    String       @default("Lịch hẹn")  // Lịch cắt / Lịch khám
+  
+  // Telegram & Configs
+  telegramBotToken String?
+  telegramChatId   String?
+  requireDeposit   Boolean      @default(false)
+  depositAmount    Decimal      @default(0) @db.Decimal(10, 2)
+  
+  openTime        String       @default("08:00")
+  closeTime       String       @default("21:00")
+  slotInterval    Int          @default(30) // Bước nhảy thời gian (phút): 15, 30, 60
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model User {
+  id           String    @id @default(uuid())
+  phone        String    @unique
+  fullName     String
+  passwordHash String?
+  role         Role      @default(CUSTOMER)
+  
+  staffProfile StaffProfile?
+  bookings     Booking[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model StaffProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String?  // Master Stylist, Bác sĩ CKI...
+  avatarUrl   String?
+  bio         String?
+  isActive    Boolean  @default(true)
+  
+  // Ca làm việc & Dịch vụ phụ trách
+  services    Service[] @relation("StaffServices")
+  bookings    Booking[]
+  schedules   StaffSchedule[]
+}
+
+model StaffSchedule {
+  id          String       @id @default(uuid())
+  staffId     String
+  staff       StaffProfile @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int          // 0: Chủ nhật, 1: Thứ 2, ..., 6: Thứ 7
+  startTime   String       // "08:00"
+  endTime     String       // "18:00"
+  isDayOff    Boolean      @default(false)
+}
+
+model ServiceCategory {
+  id          String    @id @default(uuid())
+  name        String
+  services    Service[]
+}
+
+model Service {
+  id          String          @id @default(uuid())
+  categoryId  String?
+  category    ServiceCategory? @relation(fields: [categoryId], references: [id])
+  name        String
+  description String?
+  price       Decimal         @db.Decimal(10, 2)
+  durationMin Int             // Thời gian làm: 30, 45, 60 phút
+  imageUrl    String?
+  isActive    Boolean         @default(true)
+  
+  staffs      StaffProfile[]  @relation("StaffServices")
+  bookings    Booking[]
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  code            String        @unique // Mã đặt lịch: FB-2026-XXXX
+  customerId      String
+  customer        User          @relation(fields: [customerId], references: [id])
+  staffId         String
+  staff           StaffProfile  @relation(fields: [staffId], references: [id])
+  serviceId       String
+  service         Service       @relation(fields: [serviceId], references: [id])
+  
+  startTime       DateTime      // Thời gian bắt đầu
+  endTime         DateTime      // = startTime + service.durationMin
+  status          BookingStatus @default(PENDING_DEPOSIT)
+  note            String?
+  
+  // Thông tin thanh toán / Cọc
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  depositAmount   Decimal       @default(0) @db.Decimal(10, 2)
+  isPaidDeposit   Boolean       @default(false)
+  transactionRef  String?       // Mã giao dịch ngân hàng
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([staffId, startTime, endTime])
+  @@index([status])
+}
