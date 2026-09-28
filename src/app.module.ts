@@ -35,8 +35,8 @@ import { AppService } from './app.service.js';
               password: parsed.password ? decodeURIComponent(parsed.password) : undefined,
               username: parsed.username ? decodeURIComponent(parsed.username) : undefined,
               tls: parsed.protocol === 'rediss:' ? {} : undefined,
-              lazyConnect: true,
-              maxRetriesPerRequest: 1,
+              maxRetriesPerRequest: null,
+              enableReadyCheck: false,
             },
           };
         }
@@ -45,8 +45,8 @@ import { AppService } from './app.service.js';
             host: config.get<string>('redis.host', 'localhost'),
             port: config.get<number>('redis.port', 6379),
             password: config.get<string>('redis.password'),
-            lazyConnect: true,
-            maxRetriesPerRequest: 1,
+            maxRetriesPerRequest: null,
+            enableReadyCheck: false,
           },
         };
       },
